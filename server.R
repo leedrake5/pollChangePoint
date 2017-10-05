@@ -163,29 +163,32 @@ ApproveBCP <- reactive({
     notsure.bayes.dataframe <- data.frame(notsure.frame$Date, notsure.frame$Undecided, notsure.posterior.mean, notsure.posterior.prob, notsure.posterior.sd)
     colnames(notsure.bayes.dataframe) <- c("Date", "Undecided", "PosteriorMean", "PosteriorProb", "PosteriorSD")
     
-   disapprove.bc <- bcp(y=approval.table$Disapprove,  burnin=2000, mcmc=10000,  w0=mean(approval.table$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    disapprove.frame <- approval.table[complete.cases(approval.table["Disapprove"]),]
+
+    
+   disapprove.bc <- bcp(y=disapprove.frame$Disapprove,  burnin=2000, mcmc=10000,  w0=mean(disapprove.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
     disapprove.posterior.mean <- disapprove.bc$posterior.mean
     disapprove.posterior.prob <- disapprove.bc$posterior.prob
     disapprove.posterior.var <- disapprove.bc$posterior.var
     disapprove.posterior.sd <- sqrt(disapprove.posterior.var)
     
-    disapprove.bayes.dataframe <- data.frame(approval.table$Date, approval.table$Disapprove, disapprove.posterior.mean, disapprove.posterior.prob, disapprove.posterior.sd)
+    disapprove.bayes.dataframe <- data.frame(disapprove.frame$Date, disapprove.frame$Disapprove, disapprove.posterior.mean, disapprove.posterior.prob, disapprove.posterior.sd)
     colnames(disapprove.bayes.dataframe) <- c("Date", "Disapprove", "PosteriorMean", "PosteriorProb", "PosteriorSD")
     
     total.frame <- data.frame(
-    c(approval.table$Date, notsure.frame$Date, approval.table$Date),
-    c(approval.table$Disapprove, notsure.frame$Undecided, approval.table$Approve),
+    c(disapprove.frame$Date, notsure.frame$Date, approval.table$Date),
+    c(disapprove.frame$Disapprove, notsure.frame$Undecided, approval.table$Approve),
     c(disapprove.posterior.mean, notsure.posterior.mean, approve.posterior.mean),
     c(disapprove.posterior.prob, notsure.posterior.prob, approve.posterior.prob),
     c(disapprove.posterior.sd, notsure.posterior.sd, approve.posterior.sd),
-    c(rep("3. Disapprove", length(approval.table$Disapprove)), rep("2. Undecided", length(notsure.frame$Undecided)), rep("1. Approve", length(approval.table$Approve))),
-    c(approval.table$survey_house, notsure.frame$survey_house, approval.table$survey_house),
-    c(approval.table$mode, notsure.frame$mode, approval.table$mode)
+    c(rep("3. Disapprove", length(disapprove.frame$Disapprove)), rep("2. Undecided", length(notsure.frame$Undecided)), rep("1. Approve", length(approval.table$Approve))),
+    c(disapprove.frame$survey_house, notsure.frame$survey_house, approval.table$survey_house),
+    c(disapprove.frame$mode, notsure.frame$mode, approval.table$mode)
     )
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder))
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder))*-1
     
     total.frame
     
@@ -247,7 +250,7 @@ SupportBCP <- reactive({
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder))
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder))*-1
     
     total.frame
     
@@ -310,7 +313,7 @@ Congress2018BCP <- reactive({
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder))
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder))*-1
     
     total.frame
     
@@ -372,7 +375,7 @@ election2016BCP <- reactive({
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder))
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder))*-1
     
     total.frame
     
@@ -434,7 +437,7 @@ election2012BCP <- reactive({
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder))
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder))*-1
     
     total.frame
     
