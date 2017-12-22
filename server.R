@@ -474,7 +474,7 @@ ratingPlot <- reactive({
     geom_point(alpha=0.5, aes(colour=Type)) +
     geom_line(aes(as.Date(Date, format="%Y-%m-%d"), PosteriorMean, colour=Type)) +
     theme_light() +
-    scale_x_date("Date") +
+    scale_x_date("Date", date_minor_breaks = "1 month") +
     scale_y_continuous("Rating %") +
     scale_color_manual(values = rev(cols))
     
@@ -487,7 +487,7 @@ posteriorProbPlot <- reactive({
     ggplot(bcp.table, aes(Date, PosteriorProb)) +
     geom_line(aes(colour=Type))+
     theme_bw() +
-    scale_x_date("Date") +
+    scale_x_date("Date", date_minor_breaks = "1 month") +
     scale_y_continuous("Probability", limits = c(-1.05, 1.05), breaks=seq(-1, 1, 0.25)) +
     scale_color_manual(values = rev(cols))
 })
