@@ -26,8 +26,12 @@ tags$p("Click 'Go' to start analysis"),
 
 tags$hr(),
 
-sliderInput("prior", label="Prior Probability of a change-point", min=0.001, max=1, value=0.001),
-tags$p("A smaller prior is better for big data sets"),
+checkboxInput('advanced', "Advanced", value=FALSE),
+uiOutput('advancedslider'),
+uiOutput('advancedburnin'),
+uiOutput('advancedmcmc'),
+
+#tags$p("A smaller prior is better for big data sets"),
 
 tags$hr(),
 

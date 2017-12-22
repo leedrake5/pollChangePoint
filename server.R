@@ -8,6 +8,61 @@ library(dplyr)
 options(shiny.maxRequestSize=180000*1024^2)
 
 shinyServer(function(input, output, session) {
+    
+    output$advancedslider <- renderUI({
+        
+        if(input$advanced==TRUE){
+        sliderInput("prior", label="Prior Probability of a change-point", min=0.001, max=1, value=0.001)
+        }else if(input$advanced==FALSE){
+            p()
+        }
+    })
+    
+    output$advancedburnin <- renderUI({
+        
+        if(input$advanced==TRUE){
+            sliderInput("burnin", label="Burn-Ins", min=1, max=10000, value=200)
+        }else if(input$advanced==FALSE){
+            p()
+        }
+    })
+    
+    output$advancedmcmc <- renderUI({
+        
+        if(input$advanced==TRUE){
+            sliderInput("mcmc", label="Markov-Chain Monte Carlo Simulations", min=1, max=100000, value=1000)
+        }else if(input$advanced==FALSE){
+            p()
+        }
+    })
+    
+    defaultprior <- reactive({
+        if(input$advanced==TRUE){
+            input$prior
+        }else if(input$advanced==FALSE){
+            0.001
+        }
+        
+    })
+    
+    defaultburnin <- reactive({
+        if(input$advanced==TRUE){
+            input$burnin
+        }else if(input$advanced==FALSE){
+            200
+        }
+        
+    })
+    
+    defaultmcmc <- reactive({
+        if(input$advanced==TRUE){
+            input$mcmc
+        }else if(input$advanced==FALSE){
+            1000
+        }
+        
+    })
+
 
 
 
@@ -142,7 +197,7 @@ ApproveBCP <- reactive({
     
     approval.table$Date <- as.Date(approval.table$end_date, format="%Y-%m-%d")
 
-    approve.bc <- bcp(y=approval.table$Approve, burnin=200, mcmc=1000, w0=mean(approval.table$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    approve.bc <- bcp(y=approval.table$Approve, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(approval.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     
     approve.posterior.mean <- approve.bc$posterior.mean
     approve.posterior.prob <- approve.bc$posterior.prob
@@ -154,7 +209,7 @@ ApproveBCP <- reactive({
     
     notsure.frame <- approval.table[complete.cases(approval.table["Undecided"]),]
     
-    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=200, mcmc=1000,  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=defaultburnin(), mcmc=defaultmcmc(),  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     notsure.posterior.mean <- notsure.bc$posterior.mean
     notsure.posterior.prob <- notsure.bc$posterior.prob
     notsure.posterior.var <- notsure.bc$posterior.var
@@ -166,7 +221,7 @@ ApproveBCP <- reactive({
     disapprove.frame <- approval.table[complete.cases(approval.table["Disapprove"]),]
 
     
-   disapprove.bc <- bcp(y=disapprove.frame$Disapprove,  burnin=200, mcmc=1000, w0=mean(disapprove.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+   disapprove.bc <- bcp(y=disapprove.frame$Disapprove,  burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(disapprove.frame$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     disapprove.posterior.mean <- disapprove.bc$posterior.mean
     disapprove.posterior.prob <- disapprove.bc$posterior.prob
     disapprove.posterior.var <- disapprove.bc$posterior.var
@@ -207,7 +262,7 @@ SupportBCP <- reactive({
     
     approval.table$Date <- as.Date(approval.table$end_date, format="%Y-%m-%d")
     
-    approve.bc <- bcp(y=approval.table$Favor, burnin=200, mcmc=1000, w0=mean(approval.table$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    approve.bc <- bcp(y=approval.table$Favor, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(approval.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     
     approve.posterior.mean <- approve.bc$posterior.mean
     approve.posterior.prob <- approve.bc$posterior.prob
@@ -219,7 +274,7 @@ SupportBCP <- reactive({
     
     notsure.frame <- approval.table[complete.cases(approval.table["Undecided"]),]
 
-    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=200, mcmc=1000,  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=defaultburnin(), mcmc=defaultmcmc(),  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     notsure.posterior.mean <- notsure.bc$posterior.mean
     notsure.posterior.prob <- notsure.bc$posterior.prob
     notsure.posterior.var <- notsure.bc$posterior.var
@@ -228,7 +283,7 @@ SupportBCP <- reactive({
     notsure.bayes.dataframe <- data.frame(notsure.frame$Date, notsure.frame$Undecided, notsure.posterior.mean, notsure.posterior.prob, notsure.posterior.sd)
     colnames(notsure.bayes.dataframe) <- c("Date", "Undecided", "PosteriorMean", "PosteriorProb", "PosteriorSD")
     
-    disapprove.bc <- bcp(y=approval.table$Oppose,  burnin=200, mcmc=1000,  w0=mean(approval.table$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    disapprove.bc <- bcp(y=approval.table$Oppose,  burnin=defaultburnin(), mcmc=defaultmcmc(),  w0=mean(approval.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     disapprove.posterior.mean <- disapprove.bc$posterior.mean
     disapprove.posterior.prob <- disapprove.bc$posterior.prob
     disapprove.posterior.var <- disapprove.bc$posterior.var
@@ -270,7 +325,7 @@ Congress2018BCP <- reactive({
     
     congress.table$Date <- as.Date(congress.table$end_date, format="%Y-%m-%d")
     
-    approve.bc <- bcp(y=congress.table$Democrat, burnin=200, mcmc=1000, w0=mean(congress.table$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    approve.bc <- bcp(y=congress.table$Democrat, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(congress.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     
     approve.posterior.mean <- approve.bc$posterior.mean
     approve.posterior.prob <- approve.bc$posterior.prob
@@ -282,7 +337,7 @@ Congress2018BCP <- reactive({
     
     notsure.frame <- congress.table[complete.cases(congress.table["Undecided"]),]
 
-    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=200, mcmc=1000,  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=defaultburnin(), mcmc=defaultmcmc(),  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     notsure.posterior.mean <- notsure.bc$posterior.mean
     notsure.posterior.prob <- notsure.bc$posterior.prob
     notsure.posterior.var <- notsure.bc$posterior.var
@@ -291,7 +346,7 @@ Congress2018BCP <- reactive({
     notsure.bayes.dataframe <- data.frame(notsure.frame$Date, notsure.frame$Undecided, notsure.posterior.mean, notsure.posterior.prob, notsure.posterior.sd)
     colnames(notsure.bayes.dataframe) <- c("Date", "Undecided", "PosteriorMean", "PosteriorProb", "PosteriorSD")
     
-    disapprove.bc <- bcp(y=congress.table$Republican,  burnin=200, mcmc=1000,  w0=mean(congress.table$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    disapprove.bc <- bcp(y=congress.table$Republican,  burnin=defaultburnin(), mcmc=defaultmcmc(),  w0=mean(congress.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     disapprove.posterior.mean <- disapprove.bc$posterior.mean
     disapprove.posterior.prob <- disapprove.bc$posterior.prob
     disapprove.posterior.var <- disapprove.bc$posterior.var
@@ -332,7 +387,7 @@ election2016BCP <- reactive({
     
     election2016.table$Date <- as.Date(election2016.table$end_date, format="%Y-%m-%d")
     
-    approve.bc <- bcp(y=election2016.table$Clinton, burnin=200, mcmc=1000, w0=mean(election2016.table$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    approve.bc <- bcp(y=election2016.table$Clinton, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(election2016.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     
     approve.posterior.mean <- approve.bc$posterior.mean
     approve.posterior.prob <- approve.bc$posterior.prob
@@ -344,7 +399,7 @@ election2016BCP <- reactive({
     
     notsure.frame <- election2016.table[complete.cases(election2016.table["Undecided"]),]
     
-    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=200, mcmc=1000,  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=defaultburnin(), mcmc=defaultmcmc(),  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     notsure.posterior.mean <- notsure.bc$posterior.mean
     notsure.posterior.prob <- notsure.bc$posterior.prob
     notsure.posterior.var <- notsure.bc$posterior.var
@@ -353,7 +408,7 @@ election2016BCP <- reactive({
     notsure.bayes.dataframe <- data.frame(notsure.frame$Date, notsure.frame$Undecided, notsure.posterior.mean, notsure.posterior.prob, notsure.posterior.sd)
     colnames(notsure.bayes.dataframe) <- c("Date", "Undecided", "PosteriorMean", "PosteriorProb", "PosteriorSD")
     
-    disapprove.bc <- bcp(y=election2016.table$Trump,  burnin=200, mcmc=1000,  w0=mean(election2016.table$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    disapprove.bc <- bcp(y=election2016.table$Trump,  burnin=defaultburnin(), mcmc=defaultmcmc(),  w0=mean(election2016.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     disapprove.posterior.mean <- disapprove.bc$posterior.mean
     disapprove.posterior.prob <- disapprove.bc$posterior.prob
     disapprove.posterior.var <- disapprove.bc$posterior.var
@@ -394,7 +449,7 @@ election2012BCP <- reactive({
     
     election2012.table$Date <- as.Date(election2012.table$end_date, format="%Y-%m-%d")
     
-    approve.bc <- bcp(y=election2012.table$Obama, burnin=200, mcmc=1000, w0=mean(election2012.table$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    approve.bc <- bcp(y=election2012.table$Obama, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(election2012.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     
     approve.posterior.mean <- approve.bc$posterior.mean
     approve.posterior.prob <- approve.bc$posterior.prob
@@ -406,7 +461,7 @@ election2012BCP <- reactive({
     
     notsure.frame <- election2012.table[complete.cases(election2012.table["Undecided"]),]
     
-    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=200, mcmc=1000,  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=defaultburnin(), mcmc=defaultmcmc(),  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     notsure.posterior.mean <- notsure.bc$posterior.mean
     notsure.posterior.prob <- notsure.bc$posterior.prob
     notsure.posterior.var <- notsure.bc$posterior.var
@@ -415,7 +470,7 @@ election2012BCP <- reactive({
     notsure.bayes.dataframe <- data.frame(notsure.frame$Date, notsure.frame$Undecided, notsure.posterior.mean, notsure.posterior.prob, notsure.posterior.sd)
     colnames(notsure.bayes.dataframe) <- c("Date", "Undecided", "PosteriorMean", "PosteriorProb", "PosteriorSD")
     
-    disapprove.bc <- bcp(y=election2012.table$Romney,  burnin=200, mcmc=1000,  w0=mean(election2012.table$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    disapprove.bc <- bcp(y=election2012.table$Romney,  burnin=defaultburnin(), mcmc=defaultmcmc(),  w0=mean(election2012.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     disapprove.posterior.mean <- disapprove.bc$posterior.mean
     disapprove.posterior.prob <- disapprove.bc$posterior.prob
     disapprove.posterior.var <- disapprove.bc$posterior.var
