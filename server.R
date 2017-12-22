@@ -154,7 +154,7 @@ ApproveBCP <- reactive({
     
     notsure.frame <- approval.table[complete.cases(approval.table["Undecided"]),]
     
-    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=2000, mcmc=10000  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=2000, mcmc=10000,  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
     notsure.posterior.mean <- notsure.bc$posterior.mean
     notsure.posterior.prob <- notsure.bc$posterior.prob
     notsure.posterior.var <- notsure.bc$posterior.var
@@ -219,7 +219,7 @@ SupportBCP <- reactive({
     
     notsure.frame <- approval.table[complete.cases(approval.table["Undecided"]),]
 
-    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=2000, mcmc=10000  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
+    notsure.bc <- bcp(y=notsure.frame$Undecided,  burnin=2000, mcmc=10000,  w0=mean(notsure.frame$margin_of_error, na.rm=TRUE)/100, p0=input$prior)
     notsure.posterior.mean <- notsure.bc$posterior.mean
     notsure.posterior.prob <- notsure.bc$posterior.prob
     notsure.posterior.var <- notsure.bc$posterior.var
