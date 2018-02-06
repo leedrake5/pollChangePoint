@@ -15,7 +15,7 @@ tags$style(type="text/css",
 ".shiny-output-error:before { visibility: hidden; }"
 ),
 
-selectInput("choosepoll", label="Choose Dataset", choices=c("Trump", "Congress2018", "PartisanAffiliation", "Obamacare", "Obama", "ClintonTrump2016", "ObamaRomney2012"), selected="PartisanAffiliation"),
+selectInput("choosepoll", label="Choose Dataset", choices=c("Trump", "Congress2018", "PartisanAffiliation", "Obamacare", "Obama", "ClintonTrump2016", "ObamaRomney2012"), selected="Trump"),
 actionButton("pollbayes", label = "Go"),
 downloadButton('downloadplot', label="Plot"),
 downloadButton('downloadtable', label="Table"),
