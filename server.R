@@ -4,6 +4,7 @@ library(DT)
 library(shiny)
 library(bcp)
 library(dplyr)
+library(reshape2)
 
 options(shiny.maxRequestSize=180000*1024^2)
 
@@ -62,6 +63,19 @@ shinyServer(function(input, output, session) {
         }
         
     })
+    
+    
+    
+    output$pollchooserpartisan <- renderUI({
+        
+        if(input$choosepoll=="PartisanAffiliation"){
+            selectInput("includepolls", label="Use", choices=c("Congress2018", "Trump", "Obama", "Post-2016", "All"), selected="Trump")
+        } else  if(input$choosepoll!="PartisanAffiliation"){
+            p()
+        }
+    })
+    
+
 
 
 
@@ -91,9 +105,8 @@ dataFetchObamaRomney2012 <- reactive({
 })
 
 dataFetch <- reactive({
-    input$choosepoll
-
-    isolate(data <- if(input$choosepoll=="Trump"){
+    
+    data <- if(input$choosepoll=="Trump"){
         dataFetchTrump()
     } else if(input$choosepoll=="Congress2018"){
         dataFetchCongress2018()
@@ -105,33 +118,57 @@ dataFetch <- reactive({
         dataFetchClintonTrump2016()
     } else if(input$choosepoll=="ObamaRomney2012"){
         dataFetchObamaRomney2012()
-    })
+    } else if(input$choosepoll=="PartisanAffiliation" && input$includepolls=="Trump"){
+        dataFetchTrump()[,c("poll_slug", "sample_subpopulation", "start_date", "end_date", "survey_house", "mode", "observations", "partisanship", "partisan_affiliation")]
+    } else if(input$choosepoll=="PartisanAffiliation" && input$includepolls=="Congress2018"){
+        dataFetchCongress2018()[,c("poll_slug", "sample_subpopulation", "start_date", "end_date", "survey_house", "mode", "observations", "partisanship", "partisan_affiliation")]
+    } else if(input$choosepoll=="PartisanAffiliation" && input$includepolls=="Obama"){
+        dataFetchObama()[,c("poll_slug", "sample_subpopulation", "start_date", "end_date", "survey_house", "mode", "observations", "partisanship", "partisan_affiliation")]
+    } else if(input$choosepoll=="PartisanAffiliation" && input$includepolls=="Post-2016"){
+        rbind(dataFetchTrump()[,c("poll_slug", "sample_subpopulation", "start_date", "end_date", "survey_house", "mode", "observations", "partisanship", "partisan_affiliation")], dataFetchCongress2018()[,c("poll_slug", "sample_subpopulation", "start_date", "end_date", "survey_house", "mode", "observations", "partisanship", "partisan_affiliation")])
+    } else if(input$choosepoll=="PartisanAffiliation" && input$includepolls=="All"){
+        rbind(dataFetchTrump()[,c("poll_slug", "sample_subpopulation", "start_date", "end_date", "survey_house", "mode", "observations", "partisanship", "partisan_affiliation")], dataFetchCongress2018()[,c("poll_slug", "sample_subpopulation", "start_date", "end_date", "survey_house", "mode", "observations", "partisanship", "partisan_affiliation")], dataFetchObama()[,c("poll_slug", "sample_subpopulation", "start_date", "end_date", "survey_house", "mode", "observations", "partisanship", "partisan_affiliation")], dataFetchClintonTrump2016()[,c("poll_slug", "sample_subpopulation", "start_date", "end_date", "survey_house", "mode", "observations", "partisanship", "partisan_affiliation")], dataFetchObamaRomney2012()[,c("poll_slug", "sample_subpopulation", "start_date", "end_date", "survey_house", "mode", "observations", "partisanship", "partisan_affiliation")])
+        
+    }
+    
+    data$Date <- as.Date(data$end_date, format="%Y-%m-%d")
+    data <- data[order(as.Date(data$Date, format="%Y-%m-%d")),]
+    
+    
+})
+    
     
 
     
-})
+
+    
+
 
 
 
 selectPeopleUnique <- reactive({
-    unique(dataFetch()$sample_subpopulation)
+    sort(unique(dataFetch()$sample_subpopulation))
 })
 
 selectPollsterUnique <- reactive({
-    unique(as.factor(dataFetch()$survey_house))
+    sort(unique(as.factor(dataFetch()$survey_house)))
 })
 
 selectModeUnique <- reactive({
-    unique(dataFetch()$mode)
+    sort(unique(dataFetch()$mode))
 })
 
 selectPartisanUnique <- reactive({
-    unique(dataFetch()$partisan_affiliation)
+    sort(unique(dataFetch()$partisan_affiliation))
 })
 
 output$selectPeople <- renderUI({
     
-    selectInput(inputId = "people_vars", label = h4("Population"), choices = selectPeopleUnique(), selected=c("Likely Voters", "Registered Voters", "Adults"), multiple=TRUE)
+    if(input$choosepoll!="PartisanAffiliation"){
+        selectInput(inputId = "people_vars", label = h4("Population"), choices = selectPeopleUnique(), selected=c("Likely Voters", "Registered Voters", "Adults"), multiple=TRUE)
+    }else  if(input$choosepoll=="PartisanAffiliation"){
+                selectInput(inputId = "people_vars", label = h4("Population"), choices = c("Registered Voters", "Adults"), selected="Registered Voters", multiple=FALSE)
+    }
     
     
 })
@@ -163,12 +200,24 @@ dataSubset <- reactive({
     all.data <- dataFetch()
     
     
-    filter(all.data,
-    sample_subpopulation %in% c(input$people_vars),
-    mode %in% c(input$mode_vars),
-    survey_house %in% c(input$pollster_vars),
-    partisan_affiliation %in% c(input$partisan_vars)
-    )
+    if(input$choosepoll!="PartisanAffiliation"){
+        filter(all.data,
+        sample_subpopulation %in% c(input$people_vars),
+        mode %in% c(input$mode_vars),
+        survey_house %in% c(input$pollster_vars),
+        partisan_affiliation %in% c(input$partisan_vars)
+        )
+    }else if(input$choosepoll=="PartisanAffiliation"){
+        #filter(all.data[grepl(c(input$people_vars), all.data$sample_subpopulation),],
+        filter(all.data,
+        grepl(c(input$people_vars), sample_subpopulation),
+        mode %in% c(input$mode_vars),
+        survey_house %in% c(input$pollster_vars),
+        partisan_affiliation %in% c(input$partisan_vars)
+        )
+    }
+    
+
     
 
     
@@ -180,10 +229,103 @@ output$trumppolltable <- renderDataTable({
     
 })
 
+preSubParty <- reactive({
+    
+    input$pollbayes
+    isolate(partisan.table <- dataSubset())
+    
+    
+    test.cast <- reshape2::dcast(data=partisan.table, poll_slug+end_date+mode+survey_house~sample_subpopulation, value.var="observations", fun.aggregate=mean)
+    
+    #test.cast[,5:length(test.cast)] <- sapply(test.cast[,5:length(test.cast)], function(x) as.numeric(as.character(x)))
+    test.cast[test.cast == "NaN"] = 0
+    test.cast[is.na(test.cast)] <- 0
+    test.cast <- as.data.frame(test.cast)
+    test.cast$Total <- test.cast[, input$people_vars]
+    test.cast$Republican <- rowSums( data.frame(test.cast[,grepl( "Republican" , names(test.cast ) )], rep(0, length(test.cast[,1]))))/test.cast$Total
+    test.cast$Democrat <- rowSums( data.frame(test.cast[,grepl( "Democrat" , names(test.cast ) )], rep(0, length(test.cast[,1]))))/test.cast$Total
+    test.cast$Independent <- rowSums( data.frame(test.cast[,grepl( "independent" , names(test.cast ) )], rep(0, length(test.cast[,1]))))/test.cast$Total
+    
+    test.cast$Date <- as.Date(test.cast$end_date, format="%Y-%m-%d")
+    test.cast <- test.cast[order(as.Date(test.cast$Date, format="%Y-%m-%d")),]
+    
+    test.cast
+    
+})
+
+preParty <- reactive({
+    
+   test.cast <- preSubParty()
+   
+    
+    test.cast[test.cast==0] <- NA
+    #test.cast[test.cast==""] <- NA
+    
+    #test.cast
+
+    test.cast[!(is.na(test.cast[,"Democrat"]) | is.na(test.cast[,"Republican"]) | is.na(test.cast[,"Independent"]) | is.na(test.cast[,"Total"]) | test.cast[,"Democrat"] == "" | test.cast[,"Republican"] == "" | test.cast[,"Independent"] == "" | test.cast[,"Total"] == ""),]
+    
+    
+})
 
 
 
+PartyBCP <- reactive({
+    
 
+
+    test.cast <- preParty()
+    
+    dem.bc <- bcp(y=test.cast$Democrat, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=sd(test.cast$Democrat), p0=defaultprior())
+    
+    dem.posterior.mean <- dem.bc$posterior.mean
+    dem.posterior.prob <- dem.bc$posterior.prob
+    dem.posterior.var <- dem.bc$posterior.var
+    dem.posterior.sd <- sqrt(dem.posterior.var)
+    
+    dem.bayes.dataframe <- data.frame(test.cast$Date, test.cast$Democrat, dem.posterior.mean, dem.posterior.prob, dem.posterior.sd)
+    colnames(dem.bayes.dataframe) <- c("Date", "Democrat", "PosteriorMean", "PosteriorProb", "PosteriorSD")
+    
+    
+    indy.bc <- bcp(y=test.cast$Independent,  burnin=defaultburnin(), mcmc=defaultmcmc(),  w0=sd(test.cast$Independent), p0=defaultprior())
+    indy.posterior.mean <- indy.bc$posterior.mean
+    indy.posterior.prob <- indy.bc$posterior.prob
+    indy.posterior.var <- indy.bc$posterior.var
+    indy.posterior.sd <- sqrt(indy.posterior.var)
+    
+    indy.bayes.dataframe <- data.frame(test.cast$Date, test.cast$Independent, indy.posterior.mean, indy.posterior.prob, indy.posterior.sd)
+    colnames(indy.bayes.dataframe) <- c("Date", "Independent", "PosteriorMean", "PosteriorProb", "PosteriorSD")
+    
+    
+    rep.bc <- bcp(y=test.cast$Republican,  burnin=defaultburnin(), mcmc=defaultmcmc(), w0=sd(test.cast$Republican), p0=defaultprior())
+    rep.posterior.mean <- rep.bc$posterior.mean
+    rep.posterior.prob <- rep.bc$posterior.prob
+    rep.posterior.var <- rep.bc$posterior.var
+    rep.posterior.sd <- sqrt(rep.posterior.var)
+    
+    rep.bayes.dataframe <- data.frame(test.cast$Date, test.cast$Republican, rep.posterior.mean, rep.posterior.prob, rep.posterior.sd)
+    colnames(rep.bayes.dataframe) <- c("Date", "Republican", "PosteriorMean", "PosteriorProb", "PosteriorSD")
+    
+    total.frame <- data.frame(
+    c(dem.bayes.dataframe$Date, indy.bayes.dataframe$Date, rep.bayes.dataframe$Date),
+    c(dem.bayes.dataframe$Democrat, indy.bayes.dataframe$Independent, rep.bayes.dataframe$Republican),
+    c(dem.posterior.mean, indy.posterior.mean, rep.posterior.mean),
+    c(dem.posterior.prob, indy.posterior.prob, rep.posterior.prob),
+    c(dem.posterior.sd, indy.posterior.sd, rep.posterior.sd),
+    c(rep("1. Democrat", length(dem.bayes.dataframe$Democrat)), rep("2. Independent", length(indy.bayes.dataframe$Independent)), rep("3. Republican", length(rep.bayes.dataframe$Republican))),
+    c(as.vector(as.character(test.cast$survey_house)), as.vector(as.character(test.cast$survey_house)), as.vector(as.character(test.cast$survey_house))),
+    c(as.vector(as.character(test.cast$mode)), as.vector(as.character(test.cast$mode)), as.vector(as.character(test.cast$mode)))
+    )
+    colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
+    
+    total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))*-1
+    
+    total.frame
+    
+    
+    
+})
 
 
 ApproveBCP <- reactive({
@@ -194,8 +336,8 @@ ApproveBCP <- reactive({
     isolate(approval.table <- dataSubset())
     
     
-    
     approval.table$Date <- as.Date(approval.table$end_date, format="%Y-%m-%d")
+    approval.table <- approval.table[order(as.Date(approval.table$Date, format="%Y-%m-%d")),]
 
     approve.bc <- bcp(y=approval.table$Approve, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(approval.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     
@@ -259,8 +401,8 @@ SupportBCP <- reactive({
     isolate(approval.table <- dataSubset())
     
     
-    
     approval.table$Date <- as.Date(approval.table$end_date, format="%Y-%m-%d")
+    approval.table <- approval.table[order(as.Date(approval.table$Date, format="%Y-%m-%d")),]
     
     approve.bc <- bcp(y=approval.table$Favor, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(approval.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     
@@ -322,8 +464,8 @@ Congress2018BCP <- reactive({
     isolate(congress.table <- dataSubset())
     
     
-    
     congress.table$Date <- as.Date(congress.table$end_date, format="%Y-%m-%d")
+    congress.table <- congress.table[order(as.Date(congress.table$Date, format="%Y-%m-%d")),]
     
     approve.bc <- bcp(y=congress.table$Democrat, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(congress.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     
@@ -384,8 +526,8 @@ election2016BCP <- reactive({
     isolate(election2016.table <- dataSubset())
     
     
-    
-    election2016.table$Date <- as.Date(election2016.table$end_date, format="%Y-%m-%d")
+    election2016$Date <- as.Date(election2016$end_date, format="%Y-%m-%d")
+    election2016 <- election2016[order(as.Date(election2016$Date, format="%Y-%m-%d")),]
     
     approve.bc <- bcp(y=election2016.table$Clinton, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(election2016.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     
@@ -445,9 +587,9 @@ election2012BCP <- reactive({
     
     isolate(election2012.table <- dataSubset())
     
+    election2012$Date <- as.Date(election2012$end_date, format="%Y-%m-%d")
+    election2012 <- election2012[order(as.Date(election2012$Date, format="%Y-%m-%d")),]
     
-    
-    election2012.table$Date <- as.Date(election2012.table$end_date, format="%Y-%m-%d")
     
     approve.bc <- bcp(y=election2012.table$Obama, burnin=defaultburnin(), mcmc=defaultmcmc(), w0=mean(election2012.table$margin_of_error, na.rm=TRUE)/100, p0=defaultprior())
     
@@ -515,7 +657,9 @@ BCPTable <- reactive({
         election2016BCP()
     } else if(input$choosepoll=="ObamaRomney2012"){
         election2012BCP()
-    }
+    } else if(input$choosepoll=="PartisanAffiliation"){
+        PartyBCP()
+}
 })
 
 
@@ -563,9 +707,7 @@ output$hover_infoapproval <- renderUI({
     point <- nearPoints(point.table,  coordinfo=hover,   threshold = 5, maxpoints = 1, addDist = TRUE)
     if (nrow(point) == 0) return(NULL)
     
-    
-    approval.only <- filter(point, Rating=="Approval")
-    disapproval.only <- filter(point, Rating=="Disapproval")
+
     
     
     # calculate point position INSIDE the image as percent of total dimensions

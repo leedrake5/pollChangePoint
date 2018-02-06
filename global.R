@@ -1,4 +1,4 @@
-list.of.packages <- c("bcp", "dplyr",  "ggplot2", "shiny", "DT", "shinythemes", "gridExtra")
+list.of.packages <- c("bcp", "dplyr",  "ggplot2", "shiny", "DT", "shinythemes", "gridExtra", "reshape2")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
