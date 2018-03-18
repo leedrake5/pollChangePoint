@@ -5,6 +5,8 @@ library(shiny)
 library(bcp)
 library(dplyr)
 library(reshape2)
+library(scales)
+library(stringr)
 
 options(shiny.maxRequestSize=180000*1024^2)
 
@@ -665,30 +667,68 @@ BCPTable <- reactive({
 
 ###Create Plots
 
+plotTitle <- reactive({
+    
+    first <- if(length(input$people_vars)==1){
+        input$people_vars
+    } else if(length(input$people_vars)!=1){
+        most_common_word(input$people_vars)
+    }
+    
+    if(first=="Republican"){
+        "Republicans"
+    } else if(first=="Democrat"){
+        "Democrats"
+    } else if(first=="Independent"){
+        "Independents"
+    } else {
+        first
+    }
+
+    
+    
+})
+
 ratingPlot <- reactive({
     
     bcp.table <- BCPTable()
     
-    ggplot(bcp.table, aes(Date, Rating)) +
+    ggplot(bcp.table, aes(Date, Rating/100)) +
     geom_point(alpha=0.5, aes(colour=Type)) +
-    geom_line(aes(as.Date(Date, format="%Y-%m-%d"), PosteriorMean, colour=Type)) +
+    geom_line(aes(as.Date(Date, format="%Y-%m-%d"), PosteriorMean/100, colour=Type)) +
+    ggtitle(plotTitle()) +
     theme_light() +
     scale_x_date("Date", date_minor_breaks = "1 month") +
-    scale_y_continuous("Rating %") +
-    scale_color_manual(values = rev(cols))
+    scale_y_continuous("Rating %", labels=percent) +
+    scale_color_manual(values = rev(cols)) +
+    theme(text = element_text(size=20)) +
+    theme(axis.text.x = element_text(size=15)) +
+    theme(axis.text.y = element_text(size=15)) +
+    theme(axis.title.x = element_text(size=20)) +
+    theme(legend.text = element_text(size=20)) +
+    theme(axis.title.y = element_text(size=20, angle=90)) +
+    theme(strip.text.y = element_text(size=20, angle=270))
     
     
 })
 
 posteriorProbPlot <- reactive({
     bcp.table <- BCPTable()
-
+    
     ggplot(bcp.table, aes(Date, PosteriorProb)) +
     geom_line(aes(colour=Type))+
     theme_bw() +
     scale_x_date("Date", date_minor_breaks = "1 month") +
     scale_y_continuous("Probability", limits = c(-1.05, 1.05), breaks=seq(-1, 1, 0.25)) +
-    scale_color_manual(values = rev(cols))
+    scale_color_manual(values = rev(cols)) +
+    theme(text = element_text(size=20)) +
+    theme(axis.text.x = element_text(size=15)) +
+    theme(axis.text.y = element_text(size=15)) +
+    theme(axis.title.x = element_text(size=20)) +
+    theme(legend.text = element_text(size=20)) +
+    theme(axis.title.y = element_text(size=20, angle=90)) +
+    theme(strip.text.y = element_text(size=20, angle=270))
+    
 })
 
 
@@ -731,6 +771,8 @@ output$hover_infoapproval <- renderUI({
     wellPanel(
     style = style,
     p(HTML(paste0("<b> Date: </b>", point$Date, "<br/>"))),
+    p(HTML(paste0("<b> Rating: </b>", percent(round(point$Rating/100, 4)), "<br/>"))),
+    p(HTML(paste0("<b> Posterior Mean: </b>", percent(round(point$PosteriorMean/100, 4)),  "<br/>"))),
     p(HTML(paste0("<b> Pollster: </b>", point$Pollster, "<br/>"))),
     p(HTML(paste0("<b> Mode: </b>", point$Mode, "<br/>"))),
     p(HTML(paste0("<b> Rating: </b>", point$Rating, "<b>%</b>", "<br/>")))
@@ -738,6 +780,9 @@ output$hover_infoapproval <- renderUI({
 
     )
 })
+
+
+
 
 
 output$posteriorProbOutput <- renderPlot({
@@ -777,7 +822,7 @@ output$hover_infoposteriorprob <- renderUI({
     wellPanel(
     style = style,
     p(HTML(paste0("<b> Date: </b>", point$Date, "<br/>",
-    "<b> Posterior Probability: </b>", point$PosteriorProb, "<br/>"
+    "<b> Posterior Probability: </b>", percent(round(point$PosteriorProb, 2)), "<br/>"
     
     )))
     )

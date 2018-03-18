@@ -4,6 +4,7 @@ if(length(new.packages)) install.packages(new.packages)
 
 library(ggplot2)
 library(bcp)
+library(stringr)
 
 layOut = function(...) {
     
@@ -19,6 +20,17 @@ layOut = function(...) {
         layout.pos.col = x[[i]][[3]]))
     }
 }
+
+most_common_word <- function(string){
+    string1 <- unlist(str_split(string, pattern = " ")) # Split the string
+    string2 <- gsub("-", NA, string1)
+    string3 <- as.vector(na.omit(string2))
+    return(names(which.max(table(string3)))[1])
+
+}
+
+scaleFUN <- function(x) sprintf("%.1f", x)
+
 
 ggplotColours <- function(n = 6, h = c(0, 360) + 15){
     if ((diff(h) %% 360) < 1) h[2] <- h[2] - 360/n
