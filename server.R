@@ -1,11 +1,9 @@
 library(ggplot2)
-library(gridExtra)
 library(DT)
 library(shiny)
 library(bcp)
 library(dplyr)
 library(reshape2)
-library(scales)
 library(stringr)
 
 options(shiny.maxRequestSize=180000*1024^2)
