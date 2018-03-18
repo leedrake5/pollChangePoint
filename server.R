@@ -647,7 +647,7 @@ election2012BCP <- reactive({
 
 BCPTable <- reactive({
     
-    if(input$choosepoll=="Trump"){
+    the.table <- if(input$choosepoll=="Trump"){
         ApproveBCP()
     } else if(input$choosepoll=="Congress2018"){
         Congress2018BCP()
@@ -661,7 +661,13 @@ BCPTable <- reactive({
         election2012BCP()
     } else if(input$choosepoll=="PartisanAffiliation"){
         PartyBCP()
-}
+    }
+    
+    the.table$Rating <- the.table$Rating/100
+    the.table$PosteriorMean <- the.table$PosteriorMean/100
+    
+    the.table
+
 })
 
 
@@ -693,9 +699,9 @@ ratingPlot <- reactive({
     
     bcp.table <- BCPTable()
     
-    ggplot(bcp.table, aes(Date, Rating/100)) +
+    ggplot(bcp.table, aes(Date, Rating)) +
     geom_point(alpha=0.5, aes(colour=Type)) +
-    geom_line(aes(as.Date(Date, format="%Y-%m-%d"), PosteriorMean/100, colour=Type)) +
+    geom_line(aes(as.Date(Date, format="%Y-%m-%d"), PosteriorMean, colour=Type)) +
     ggtitle(plotTitle()) +
     theme_light() +
     scale_x_date("Date", date_minor_breaks = "1 month") +
@@ -771,12 +777,10 @@ output$hover_infoapproval <- renderUI({
     wellPanel(
     style = style,
     p(HTML(paste0("<b> Date: </b>", point$Date, "<br/>"))),
-    p(HTML(paste0("<b> Rating: </b>", percent(round(point$Rating/100, 4)), "<br/>"))),
-    p(HTML(paste0("<b> Posterior Mean: </b>", percent(round(point$PosteriorMean/100, 4)),  "<br/>"))),
+    p(HTML(paste0("<b> Rating: </b>", percent(round(point$Rating, 4)), "<br/>"))),
+    p(HTML(paste0("<b> Posterior Mean: </b>", percent(round(point$PosteriorMean, 4)),  "<br/>"))),
     p(HTML(paste0("<b> Pollster: </b>", point$Pollster, "<br/>"))),
-    p(HTML(paste0("<b> Mode: </b>", point$Mode, "<br/>"))),
-    p(HTML(paste0("<b> Rating: </b>", point$Rating, "<b>%</b>", "<br/>")))
-
+    p(HTML(paste0("<b> Mode: </b>", point$Mode, "<br/>")))
 
     )
 })

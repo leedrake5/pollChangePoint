@@ -5,6 +5,7 @@ if(length(new.packages)) install.packages(new.packages)
 library(ggplot2)
 library(bcp)
 library(stringr)
+library(scales)
 
 layOut = function(...) {
     
@@ -30,6 +31,8 @@ most_common_word <- function(string){
 }
 
 scaleFUN <- function(x) sprintf("%.1f", x)
+
+
 
 
 ggplotColours <- function(n = 6, h = c(0, 360) + 15){
