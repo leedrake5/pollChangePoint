@@ -31,14 +31,6 @@ most_common_word <- function(string){
 
 scaleFUN <- function(x) sprintf("%.1f", x)
 
-percent <- function (x)
-{
-    if (length(x) == 0)
-    return(character())
-    x <- round_any(x, precision(x)/100)
-    paste0(comma(x * 100), "%")
-}
-
 
 ggplotColours <- function(n = 6, h = c(0, 360) + 15){
     if ((diff(h) %% 360) < 1) h[2] <- h[2] - 360/n

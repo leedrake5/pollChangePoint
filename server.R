@@ -1,9 +1,11 @@
 library(ggplot2)
+library(gridExtra)
 library(DT)
 library(shiny)
 library(bcp)
 library(dplyr)
 library(reshape2)
+library(scales)
 library(stringr)
 
 options(shiny.maxRequestSize=180000*1024^2)
@@ -832,7 +834,12 @@ output$hover_infoposteriorprob <- renderUI({
 output$downloadplot <- downloadHandler(
 filename = function() { paste(input$choosepoll, '.jpg',  sep='') },
 content = function(file) {
-    ggsave(file,grid.arrange(ratingPlot(), posteriorProbPlot(), nrow=2), device='jpeg', dpi=300, width=12, height=7)
+    ggsave(file,
+    layOut(
+    list(ratingPlot(), 1:4, 1:5),
+    list(posteriorProbPlot(), 5:6, 1:5)
+    ),
+    device='jpeg', dpi=300, width=12, height=7)
 }
 )
 
