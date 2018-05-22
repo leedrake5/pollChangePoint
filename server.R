@@ -202,7 +202,7 @@ dataSubset <- reactive({
     all.data <- dataFetch()
     
     
-    if(input$choosepoll!="PartisanAffiliation"){
+    new.data <- if(input$choosepoll!="PartisanAffiliation"){
         filter(all.data,
         sample_subpopulation %in% c(input$people_vars),
         mode %in% c(input$mode_vars),
@@ -219,9 +219,10 @@ dataSubset <- reactive({
         )
     }
     
-
+    new.data$survey_house <- as.character(new.data$survey_house)
+    new.data$mode <- as.character(new.data$mode)
     
-
+    new.data
     
 })
 
@@ -321,7 +322,7 @@ PartyBCP <- reactive({
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))*-1
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))
     
     total.frame
     
@@ -387,7 +388,7 @@ ApproveBCP <- reactive({
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))*-1
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))
     
     total.frame
     
@@ -449,7 +450,7 @@ SupportBCP <- reactive({
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))*-1
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))
     
     total.frame
     
@@ -512,7 +513,7 @@ Congress2018BCP <- reactive({
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))*-1
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))
     
     total.frame
     
@@ -574,7 +575,7 @@ election2016BCP <- reactive({
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))*-1
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))
     
     total.frame
     
@@ -636,7 +637,7 @@ election2012BCP <- reactive({
     colnames(total.frame) <- c("Date", "Rating", "PosteriorMean", "PosteriorProb", "PosteriorSd", "Type", "Pollster", "Mode")
     
     total.frame$Hodder <- Hodder(total.frame$PosteriorMean)
-    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))*-1
+    total.frame$PosteriorProb <- total.frame$PosteriorProb*(total.frame$Hodder/abs(total.frame$Hodder+0.00001))
     
     total.frame
     
@@ -685,7 +686,7 @@ plotTitle <- reactive({
         "Republicans"
     } else if(first=="Democrat"){
         "Democrats"
-    } else if(first=="Independent"){
+    } else if(first=="independent"){
         "Independents"
     } else {
         first
