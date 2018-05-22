@@ -136,6 +136,14 @@ dataFetch <- reactive({
     data$Date <- as.Date(data$end_date, format="%Y-%m-%d")
     data <- data[order(as.Date(data$Date, format="%Y-%m-%d")),]
     
+    data$survey_house <- as.character(data$survey_house)
+    data$mode <- as.character(data$mode)
+    data$sample_suppopulation <- as.character(data$sample_subpopulation)
+    data$partisanship <- as.character(data$partisanship)
+    data$partisan_affiliation <- as.character(data$partisan_affiliation)
+    
+    data
+
     
 })
     
@@ -219,9 +227,7 @@ dataSubset <- reactive({
         )
     }
     
-    new.data$survey_house <- as.character(new.data$survey_house)
-    new.data$mode <- as.character(new.data$mode)
-    
+
     new.data
     
 })
